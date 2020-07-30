@@ -48,7 +48,12 @@ def _textRecognition(opt):
     char_list = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
     csv_filename = os.path.join(opt.output_dirpath,"text_information.csv")
+    Header = ["bookID","prediction"]
+
     with open(csv_filename,'w') as f:
+        writer = csv.DictWriter(f,fieldnames=Header)
+        writer.writeheader()
+
         model.eval()
         with torch.no_grad():
             for image_tensors, image_path_list in demo_loader:
@@ -106,8 +111,7 @@ def _textRecognition(opt):
                 
                     print(f'{img_name:25s}\t{pred:25s}\t{confidence_score:0.4f}')
                     
-                    writer = csv.writer(f)
-                    writer.writerow([filename,pred])
+                    writer.writerow({"bookID":filename,"prediction":pred})
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
