@@ -7,6 +7,7 @@ import torch.utils.data
 import torch.nn.functional as F
 
 import csv
+import os
 
 from utils import CTCLabelConverter, AttnLabelConverter
 from dataset import RawDataset, AlignCollate
@@ -46,40 +47,39 @@ def demo(opt):
     # predict
     char_list = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
-    model.eval()
-    with torch.no_grad():
-        for image_tensors, image_path_list in demo_loader:
-            batch_size = image_tensors.size(0)
-            image = image_tensors.to(device)
-            # For max length prediction
-            length_for_pred = torch.IntTensor([opt.batch_max_length] * batch_size).to(device)
-            text_for_pred = torch.LongTensor(batch_size, opt.batch_max_length + 1).fill_(0).to(device)
+    csv_filename = os.path.join(opt.output_dirpath,"text_information.csv")
+    with open(csv_filename,'w') as f:
+        model.eval()
+        with torch.no_grad():
+            for image_tensors, image_path_list in demo_loader:
+                batch_size = image_tensors.size(0)
+                image = image_tensors.to(device)
+                # For max length prediction
+                length_for_pred = torch.IntTensor([opt.batch_max_length] * batch_size).to(device)
+                text_for_pred = torch.LongTensor(batch_size, opt.batch_max_length + 1).fill_(0).to(device)
 
-            if 'CTC' in opt.Prediction:
-                preds = model(image, text_for_pred)
+                if 'CTC' in opt.Prediction:
+                    preds = model(image, text_for_pred)
 
-                # Select max probabilty (greedy decoding) then decode index to character
-                preds_size = torch.IntTensor([preds.size(1)] * batch_size)
-                _, preds_index = preds.max(2)
-                preds_index = preds_index.view(-1)
-                preds_str = converter.decode(preds_index.data, preds_size.data)
+                    # Select max probabilty (greedy decoding) then decode index to character
+                    preds_size = torch.IntTensor([preds.size(1)] * batch_size)
+                    _, preds_index = preds.max(2)
+                    preds_index = preds_index.view(-1)
+                    preds_str = converter.decode(preds_index.data, preds_size.data)
 
-            else:
-                preds = model(image, text_for_pred, is_train=False)
+                else:
+                    preds = model(image, text_for_pred, is_train=False)
 
-                # select max probabilty (greedy decoding) then decode index to character
-                _, preds_index = preds.max(2)
-                preds_str = converter.decode(preds_index, length_for_pred)
+                    # select max probabilty (greedy decoding) then decode index to character
+                    _, preds_index = preds.max(2)
+                    preds_str = converter.decode(preds_index, length_for_pred)
 
 
-            #log = open(f'./text_information.csv', 'a')
-            with open("../../Main/dataset/AmazonCover/train/text_information.csv",'a') as f:
-
+                #log = open(f'./text_information.csv', 'a')
                 dashed_line = '-' * 80
                 head = f'{"image_path":25s}\t{"predicted_labels":25s}\tconfidence score'
                 
                 print(f'{dashed_line}\n{head}\n{dashed_line}')
-                #log.write(f'{dashed_line}\n{head}\n{dashed_line}\n')
 
                 preds_prob = F.softmax(preds, dim=2)
                 preds_max_prob, _ = preds_prob.max(dim=2)
@@ -93,18 +93,21 @@ def demo(opt):
                     confidence_score = pred_max_prob.cumprod(dim=0)[-1]
                     pred = pred[0]
 
-                    if confidence_score < 0.25 :
+                    if confidence_score < 0.5 :
                         pred = "Unreadble"
+                        
                     
                     elif not(pred in char_list):
                         pred = "Undefined"
+    
+                    # extract the name part of the image
 
+                    filename = os.path.basename(img_name)
+                
                     print(f'{img_name:25s}\t{pred:25s}\t{confidence_score:0.4f}')
-                    #log.write(f'{img_name:25s}\t{pred:25s}\t{confidence_score:0.4f}\n')
+                    
                     writer = csv.writer(f)
-                    writer.writerow([img_name,pred])
-
-            #log.close()
+                    writer.writerow([filename,pred])
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -112,6 +115,8 @@ if __name__ == '__main__':
     parser.add_argument('--workers', type=int, help='number of data loading workers', default=4)
     parser.add_argument('--batch_size', type=int, default=192, help='input batch size')
     parser.add_argument('--saved_model', required=True, help="path to saved_model to evaluation")
+    parser.add_argument('--output_dirpath', required=True, help="path to output dirpath")
+
     """ Data processing """
     parser.add_argument('--batch_max_length', type=int, default=25, help='maximum-label-length')
     parser.add_argument('--imgH', type=int, default=32, help='the height of the input image')
