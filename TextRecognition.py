@@ -116,9 +116,9 @@ def _textRecognition(opt):
                     writer.writerow({"bookID":filename,"prediction":pred})
 
 def deleteImageAndText(img_filepath):
-    if os.path.isfile(img_name):
+    if os.path.isfile(img_filepath):
         text_filename = os.path.splitext(os.path.basename(img_filepath))[0] + ".txt"
-        text_filepath = os.path.join("/Users/taiga/Desktop/卒業研究/Code/Main/result/TextSegmentation/BoundingBoxInfo",text_filename)
+        #text_filepath = os.path.join("/Main/result/TextSegmentation/BoundingBoxInfo",text_filename)
         #print(text_filepath)
         #print(os.path.isfile(text_filepath))
         
