@@ -100,6 +100,8 @@ def _textRecognition(opt):
 
                     if confidence_score < 0.5 :
                         pred = "Unreadble"
+                        deleteImageAndText(img_name)
+                        continue
                         
                     
                     elif not(pred in char_list):
@@ -112,6 +114,21 @@ def _textRecognition(opt):
                     print(f'{img_name:25s}\t{pred:25s}\t{confidence_score:0.4f}')
                     
                     writer.writerow({"bookID":filename,"prediction":pred})
+
+def deleteImageAndText(img_filepath):
+    if os.path.isfile(img_name):
+        text_filename = os.path.splitext(os.path.basename(img_filepath))[0] + ".txt"
+        text_filepath = os.path.join("/Users/taiga/Desktop/卒業研究/Code/Main/result/TextSegmentation/BoundingBoxInfo",text_filename)
+        #print(text_filepath)
+        #print(os.path.isfile(text_filepath))
+        
+        #os.remove(img_filepath)
+        #os.remove(text_filepath)
+    else:
+        raise NameError("such file is not exist.")
+
+  
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
