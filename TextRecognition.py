@@ -100,7 +100,7 @@ def _textRecognition(opt):
 
                     if confidence_score < 0.5 :
                         pred = "Unreadble"
-                        deleteImageAndText(img_name)
+                        deleteImageAndText(opt.book_img_dirpath,img_name)
                         continue
                         
                     
@@ -108,21 +108,27 @@ def _textRecognition(opt):
                         pred = "Undefined"
     
                     # extract the name part of the image
-
                     filename = os.path.basename(img_name)
                 
                     print(f'{img_name:25s}\t{pred:25s}\t{confidence_score:0.4f}')
                     
                     writer.writerow({"bookID":filename,"prediction":pred})
 
-def deleteImageAndText(img_filepath):
+def deleteImageAndText(book_img_dirpath,img_filepath):
     if os.path.isfile(img_filepath):
-        text_filename = os.path.splitext(os.path.basename(img_filepath))[0] + ".txt"
-        #text_filepath = os.path.join("/Main/result/TextSegmentation/BoundingBoxInfo",text_filename)
+        paths = ["real","mask","inpaint"]
+        #text_filename = os.path.splitext(os.path.basename(img_filepath))[0] + ".txt"
+        filename = os.path.basename(img_filepath)
+
+        for path in paths:
+            dirpath = os.path.join(book_img_dirpath,path)
+            target_dirpath = os.path.join(dirpath,filename)
+            os.remove(target_dirpath)
+
+        #print(os.path.isfile(text_filename))
+        #text_filepath = os.path.join("../../Main/GLCIC_ConditionalGAN/result/TextSegmentation/BoundingBoxInfo",text_filename)
         #print(text_filepath)
         #print(os.path.isfile(text_filepath))
-        
-        #os.remove(img_filepath)
         #os.remove(text_filepath)
     else:
         raise NameError("such file is not exist.")
@@ -133,6 +139,7 @@ def deleteImageAndText(img_filepath):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--image_folder', required=True, help='path to image_folder which contains text images')
+    parser.add_argument('--book_img_dirpath', required=True, help='path to image_folder which contains target images')
     parser.add_argument('--workers', type=int, help='number of data loading workers', default=4)
     parser.add_argument('--batch_size', type=int, default=192, help='input batch size')
     parser.add_argument('--saved_model', required=True, help="path to saved_model to evaluation")
