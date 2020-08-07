@@ -5,6 +5,7 @@ import torch
 import torch.backends.cudnn as cudnn
 import torch.utils.data
 import torch.nn.functional as F
+import tqdm
 
 import csv
 import os
@@ -115,6 +116,7 @@ def _textRecognition(opt):
                     writer.writerow({"bookID":filename,"prediction":pred})
 
 def deleteImageAndText(book_img_dirpath,img_filepath):
+
     if os.path.isfile(img_filepath):
         paths = ["real","mask","inpaint"]
         #text_filename = os.path.splitext(os.path.basename(img_filepath))[0] + ".txt"
@@ -123,7 +125,10 @@ def deleteImageAndText(book_img_dirpath,img_filepath):
         for path in paths:
             dirpath = os.path.join(book_img_dirpath,path)
             target_dirpath = os.path.join(dirpath,filename)
-            os.remove(target_dirpath)
+            if os.path.isfile(target_dirpath):
+                os.remove(target_dirpath)
+            else:
+                continue
 
         #print(os.path.isfile(text_filename))
         #text_filepath = os.path.join("../../Main/GLCIC_ConditionalGAN/result/TextSegmentation/BoundingBoxInfo",text_filename)
