@@ -96,7 +96,13 @@ def _textRecognition(opt):
                         pred_max_prob = pred_max_prob[:pred_EOS]
 
                     # calculate confidence score (= multiply of pred_max_prob)
-                    confidence_score = pred_max_prob.cumprod(dim=0)[-1]
+                    #print("{}:{}".format(pred_max_prob,len(pred_max_prob)))
+                    try:
+                        confidence_score = pred_max_prob.cumprod(dim=0)[-1]
+                    except:
+                        deleteImageAndText(opt.book_img_dirpath,img_name)
+                        continue
+                    #confidence_score = pred_max_prob.cumprod(dim=0)[-1]
                     pred = pred[0]
 
                     if confidence_score < 0.5 :
